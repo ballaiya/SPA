@@ -1,0 +1,30 @@
+from collections import defaultdict
+
+# Step 1: Simulated stream of GPS coordinates (lat, lon)
+geo_stream = [
+    (13.05, 80.24), (13.06, 80.25), (13.05, 80.23), (13.05, 80.24), (13.07, 80.25),
+    (13.06, 80.25), (13.05, 80.23), (13.08, 80.26), (13.09, 80.27), (13.07, 80.25)
+]
+
+# Step 2: Grid size resolution (in degrees)
+grid_size = 0.01
+
+# Step 3: Map each coordinate to a grid cell
+def get_grid_cell(lat, lon, size):
+    # Use floor division to determine which grid block the point belongs to
+    return (round(lat // size * size, 2), round(lon // size * size, 2))
+
+# Step 4: Count points in each grid
+grid_counts = defaultdict(int)
+for coord in geo_stream:
+    grid = get_grid_cell(coord[0], coord[1], grid_size)
+    grid_counts[grid] += 1
+
+# Step 5: Threshold to consider a grid as 'dense'
+DENSE_THRESHOLD = 2
+
+# Step 6: Output dense grid cells
+print("Dense Grid Cells:")
+for grid, count in grid_counts.items():
+    if count >= DENSE_THRESHOLD:
+        print(f"Grid {grid} → Count: {count}")
