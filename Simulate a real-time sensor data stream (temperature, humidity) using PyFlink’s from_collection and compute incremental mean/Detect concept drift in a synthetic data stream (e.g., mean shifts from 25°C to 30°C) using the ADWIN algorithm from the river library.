@@ -1,0 +1,22 @@
+!pip install river -q
+
+from river.drift import ADWIN
+import random
+
+# Fix random seed for consistent output
+random.seed(42)
+
+# Step 1: Initialize ADWIN drift detector
+adwin = ADWIN()
+
+# Step 2: Create synthetic temperature stream with a mean shift at index 100
+stream = [random.gauss(25, 1) for _ in range(100)] + [random.gauss(30, 1) for _ in range(100)]
+
+# Step 3: Feed data and detect drift
+print(f"{'Index':<6} {'Value':<8} {'Drift Detected'}")
+
+for i, value in enumerate(stream):
+    in_drift = adwin.update(value)
+    status = "YES" if in_drift else "-"
+    print(f"{i:<6} {value:<8.2f} {status}")
+
