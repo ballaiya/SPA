@@ -1,0 +1,21 @@
+from river import datasets, tree, metrics
+# Step 1: Load dataset and model
+dataset = datasets.Elec2()
+model = tree.HoeffdingTreeClassifier()
+metric = metrics.Accuracy()
+# Step 2: Prequential (test-then-train) evaluation
+print("Index\tPrediction\tTrue Label\tAccuracy")
+for i, (x, y_true) in enumerate(dataset):
+    y_pred = model.predict_one(x)
+    if y_pred is not None:
+        metric.update(y_true, y_pred)
+        acc = metric.get()
+    else:
+        acc = float("nan")
+    model.learn_one(x, y_true)
+    # only print first 5 results
+    if i < 5:
+        print(f"{i+1}\t{y_pred or '?'}\t\t{y_true}\t\t{acc:.3f}")
+    if i >= 5:
+        break
+print(f"\nFinal prequential accuracy after {i+1} samples: {metric.get():.3f}")
