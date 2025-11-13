@@ -1,0 +1,24 @@
+import random
+from collections import Counter
+
+# Step 1: Simulated product view stream
+product_views = [random.choice(['P1', 'P2', 'P3', 'P4', 'P5']) for _ in range(500)]
+
+# Step 2: Reservoir sampling setup
+reservoir_size = 20
+reservoir = []
+
+# Step 3: Perform sampling
+for i, item in enumerate(product_views):
+    if i < reservoir_size:
+        reservoir.append(item)
+    else:
+        j = random.randint(0, i)
+        if j < reservoir_size:
+            reservoir[j] = item
+
+# Step 4: Frequency detection
+counts = Counter(reservoir)
+print("Top Product Views in Reservoir Sample:")
+for product, count in counts.most_common():
+    print(f"{product}: {count}")
