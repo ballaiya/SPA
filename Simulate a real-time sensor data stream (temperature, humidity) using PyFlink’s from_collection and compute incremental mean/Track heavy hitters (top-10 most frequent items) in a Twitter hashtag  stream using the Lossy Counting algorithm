@@ -1,0 +1,42 @@
+from collections import defaultdict
+import heapq
+
+# Step 1: Simulated stream of hashtags
+hashtag_stream = [
+    "#AI", "#Data", "#AI", "#Python", "#ML", "#AI", "#BigData", "#ML", "#Python", "#Data",
+    "#AI", "#Cloud", "#AI", "#ML", "#IoT", "#AI", "#ML", "#ML", "#Python", "#AI"
+]
+
+# Step 2: Parameters for Lossy Counting
+epsilon = 0.1
+bucket_width = int(1 / epsilon)
+bucket_id = 1
+
+# Step 3: Frequency table format: {hashtag: [count, error]}
+freq_table = {}
+
+for i, tag in enumerate(hashtag_stream):
+    # Update or insert tag count
+    if tag in freq_table:
+        freq_table[tag][0] += 1
+    else:
+        freq_table[tag] = [1, bucket_id - 1]
+
+    # Prune table every 'bucket_width' items
+    if (i + 1) % bucket_width == 0:
+        keys_to_delete = []
+        for tag in freq_table:
+            if freq_table[tag][0] + freq_table[tag][1] <= bucket_id:
+                keys_to_delete.append(tag)
+        for tag in keys_to_delete:
+            del freq_table[tag]
+        bucket_id += 1
+
+# Step 4: Extract top-10 heavy hitters
+top_k = 10
+top_tags = heapq.nlargest(top_k, freq_table.items(), key=lambda x: x[1][0])
+
+# Step 5: Output result
+print("Top Hashtags (approx. counts):")
+for tag, (count, _) in top_tags:
+    print(f"{tag}: {count}")
