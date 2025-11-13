@@ -1,0 +1,46 @@
+!pip install river scikit-learn -q
+
+from river import cluster
+from sklearn.cluster import KMeans
+import numpy as np
+import time
+
+# Step 1: Simulate network intrusion data (duration, bytes, packets)
+np.random.seed(42)
+data_stream = np.concatenate([
+    np.random.normal(loc=[1, 100, 10], scale=[0.2, 10, 1], size=(100, 3)),
+    np.random.normal(loc=[5, 500, 50], scale=[0.5, 50, 5], size=(100, 3))
+])
+
+# Step 2: Initialize CluStream
+clustream = cluster.CluStream(n_macroclusters=3, time_window=100)
+
+# Step 3: Stream processing
+start_stream = time.time()
+for row in data_stream:
+    sample = {"duration": row[0], "bytes": row[1], "packets": row[2]}
+    clustream.learn_one(sample)
+stream_time = time.time() - start_stream
+
+# Step 4: KMeans (offline baseline)
+start_kmeans = time.time()
+kmeans = KMeans(n_clusters=3, random_state=42).fit(data_stream)
+kmeans_time = time.time() - start_kmeans
+
+# Step 5: Output results
+print("⏱ Processing Time:")
+print(f"CluStream (streaming): {stream_time:.4f} seconds")
+print(f"KMeans (offline): {kmeans_time:.4f} seconds\n")
+
+# Step 6: Print CluStream centers
+print("📊 CluStream microcluster centers (approx):")
+
+try:
+    centers = clustream.microcluster_centers  # ✅ works in newer versions
+    for i, center in enumerate(centers, start=1):
+        print(f"Microcluster {i}:", {k: round(v, 2) for k, v in center.items()})
+except AttributeError:
+    print("⚠️ This version of river does not expose microcluster_centers directly.")
+
+print("\n📈 KMeans cluster centers:")
+print(np.round(kmeans.cluster_centers_, 2))
