@@ -1,0 +1,32 @@
+# Step 0: Install required library (only needed once)
+!pip install mlxtend --quiet
+
+from mlxtend.frequent_patterns import fpgrowth
+from mlxtend.preprocessing import TransactionEncoder
+import pandas as pd
+
+# Step 1: Simulated landmark window (last 1000 transactions)
+transactions = [
+    ['milk', 'bread', 'eggs'],
+    ['milk', 'bread'],
+    ['milk', 'cookies'],
+    ['milk', 'bread', 'eggs'],
+    ['cookies', 'bread'],
+    ['milk', 'bread'],
+    ['eggs', 'bread'],
+    ['milk', 'cookies'],
+    ['milk', 'bread', 'cookies'],
+    ['milk', 'eggs']
+]
+
+# Step 2: Encode transactions
+te = TransactionEncoder()
+te_ary = te.fit(transactions).transform(transactions)
+df = pd.DataFrame(te_ary, columns=te.columns_)
+
+# Step 3: Apply FP-Growth
+frequent_itemsets = fpgrowth(df, min_support=0.3, use_colnames=True)
+
+# Step 4: Output result
+print("Frequent Itemsets (support ≥ 0.3):")
+print(frequent_itemsets)
