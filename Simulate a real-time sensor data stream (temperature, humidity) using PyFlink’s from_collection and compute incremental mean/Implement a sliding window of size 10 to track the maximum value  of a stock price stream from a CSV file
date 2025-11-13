@@ -1,0 +1,16 @@
+import pandas as pd
+from collections import deque
+
+# Simulated stock price stream (replace with CSV read if needed)
+stock_prices = [100, 105, 102, 107, 106, 110, 108, 111, 115, 113, 117, 116, 118, 119, 120]
+
+# Initialize sliding window of size 10
+window = deque(maxlen=10)
+
+# Process each stock price
+print(f"{'Record':<8}{'Price':<8}{'Max in Window'}")
+
+for i, price in enumerate(stock_prices):
+    window.append(price)
+    current_max = max(window)
+    print(f"{i+1:<8}{price:<8}{current_max}")
