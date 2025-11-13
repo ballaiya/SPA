@@ -1,0 +1,63 @@
+PIPELINE STEPS: 
+Step 1: Kafka — Ingest Weather Data 
+1. Start Kafka and create topic: 
+kafka-topics.sh --create --topic weather --bootstrap-server localhost:9092 --partitions 1 -
+replication-factor 1 
+2. Simulate producer: 
+kafka-console-producer.sh --topic weather --bootstrap-server localhost:9092 
+Example message (JSON): 
+json 
+{"location": "Chennai", "temperature": 33.4, "humidity": 78} 
+Step 2: PyFlink — Process Stream 
+1. Define Kafka source and JDBC sink: 
+from pyflink.table import EnvironmentSettings, TableEnvironment 
+env_settings = EnvironmentSettings.in_streaming_mode() 
+t_env = TableEnvironment.create(env_settings) 
+# Kafka Source 
+t_env.execute_sql(""" 
+CREATE TABLE Weather ( 
+    location STRING, 
+    temperature DOUBLE, 
+    humidity DOUBLE 
+) WITH ( 'connector' = 'kafka', 
+    'topic' = 'weather', 
+    'properties.bootstrap.servers' = 'localhost:9092', 
+    'format' = 'json', 
+    'scan.startup.mode' = 'earliest-offset') 
+""") 
+# SQLite Sink 
+t_env.execute_sql(""" 
+CREATE TABLE WeatherSummary ( 
+    location STRING, 
+    avg_temp DOUBLE, 
+    PRIMARY KEY (location) NOT ENFORCED 
+) WITH ( 
+    'connector' = 'jdbc', 
+    'url' = 'jdbc:sqlite:/path/to/weather.db', 
+    'table-name' = 'weather_summary', 
+    'driver' = 'org.sqlite.JDBC' 
+) 
+""") 
+# Process and write to SQLite 
+t_env.execute_sql(""" 
+INSERT INTO WeatherSummary 
+SELECT location, AVG(temperature) 
+FROM Weather 
+GROUP BY location 
+""") 
+Step 3: SQLite — Store Aggregates 
+Create SQLite DB schema (optional): 
+CREATE TABLE weather_summary ( 
+    location TEXT PRIMARY KEY, 
+    avg_temp REAL 
+); 
+Step 4: Grafana — Real-Time Visualization 
+1. Install Grafana + SQLite plugin: 
+grafana-cli plugins install frser-sqlite-datasource 
+sudo systemctl restart grafana-server 
+2. Add Data Source: 
+o Type: SQLite 
+o Path: /path/to/weather.db 
+3. Create dashboard panel: 
+SELECT location, avg_temp FROM weather_summary; 
+4. Set refresh rate (e.g., every 5s). 
