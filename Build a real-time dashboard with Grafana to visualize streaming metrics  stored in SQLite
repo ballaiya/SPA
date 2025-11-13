@@ -1,0 +1,25 @@
+SETUP STEPS: 
+Step 1: Install Grafana (if not already) 
+# On Ubuntu/Debian: 
+sudo apt install -y grafana 
+sudo systemctl start grafana-server 
+sudo systemctl enable grafana-server 
+Visit: http://localhost:3000 
+Login with default: admin / admin 
+Step 2: Install SQLite Plugin in Grafana 
+grafana-cli plugins install frser-sqlite-datasource 
+sudo systemctl restart grafana-server 
+ Step 3: Configure SQLite as Data Source 
+• Open Grafana → Configuration → Data Sources → Add Data Source 
+• Choose SQLite 
+• Set path: /path/to/weather.db 
+• Save and test 
+Step 4: Create Dashboard & Panel 
+• Create New Dashboard → Add Panel 
+• Use SQL query (example): 
+SELECT 
+  location AS metric, 
+  avg_temp AS value 
+FROM aggregated_weather 
+• Choose panel type: Bar Chart, Time Series, etc. 
+• Configure refresh (e.g., every 5s)
