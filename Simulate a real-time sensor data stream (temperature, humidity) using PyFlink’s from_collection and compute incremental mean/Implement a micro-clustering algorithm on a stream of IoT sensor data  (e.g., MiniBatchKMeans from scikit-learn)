@@ -1,0 +1,23 @@
+from sklearn.cluster import MiniBatchKMeans
+import numpy as np
+
+# Step 1: Simulated IoT sensor stream (Temperature, Humidity)
+sensor_stream = np.array([
+    [25.2, 60.5], [25.5, 61.0], [26.1, 60.8], [24.9, 59.5], [25.8, 60.3],
+    [30.2, 65.0], [30.5, 65.5], [29.9, 64.8], [31.0, 66.1], [30.7, 65.8]
+])
+
+# Step 2: Initialize MiniBatchKMeans for 2 clusters
+kmeans = MiniBatchKMeans(n_clusters=2, batch_size=5, random_state=42)
+
+# Step 3: Process stream in mini-batches of 5
+batch_size = 5
+print("Processing batches:")
+for i in range(0, len(sensor_stream), batch_size):
+    batch = sensor_stream[i:i + batch_size]
+    kmeans.partial_fit(batch)
+    print(f"Batch {i // batch_size + 1}:\n{batch}\n")
+
+# Step 4: Output final cluster centers
+print("Final Cluster Centers:")
+print(kmeans.cluster_centers_)
