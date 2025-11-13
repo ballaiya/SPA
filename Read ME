@@ -1,3 +1,8 @@
 from 21 to 25 can't able to run in python compiler it needs kafka,spark,etc..
 
 write some output from chatgpt
+
+
+needed dependencies to run some programs
+pip install apache-flink
+pip install river
