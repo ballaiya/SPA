@@ -1,0 +1,46 @@
+from river import cluster
+import numpy as np
+import matplotlib.pyplot as plt
+
+# --- Step 1: Simulate 3 phases of drifting data ---
+np.random.seed(0)
+phase1 = np.random.normal(loc=[0, 0], scale=0.5, size=(100, 2))
+phase2 = np.random.normal(loc=[5, 5], scale=0.5, size=(100, 2))
+phase3 = np.random.normal(loc=[10, 0], scale=0.5, size=(100, 2))
+stream = np.vstack((phase1, phase2, phase3))
+
+# --- Step 2: Initialize streaming KMeans model ---
+# Set halflife to 1.0 so updates are fully applied
+model = cluster.KMeans(n_clusters=3, halflife=1.0, sigma=3, seed=42)
+errors = []
+
+# --- Step 3: Stream data and evaluate after each drift phase ---
+for i, point in enumerate(stream):
+    x = {"x": point[0], "y": point[1]}
+    model.learn_one(x)
+
+    # Detect end of each phase
+    if i == 99:
+        true_center = [0, 0]
+    elif i == 199:
+        true_center = [5, 5]
+    elif i == 299:
+        true_center = [10, 0]
+    else:
+        continue
+
+    centers = list(model.centers.values())
+    distances = [np.sqrt((c["x"] - true_center[0])**2 + (c["y"] - true_center[1])**2) for c in centers]
+    avg_error = np.mean(distances)
+    errors.append(avg_error)
+    print(f"After phase {len(errors)}: Avg error to center {true_center} = {avg_error:.2f}")
+
+# --- Step 4: Plot degradation ---
+plt.figure()
+plt.plot([1, 2, 3], errors, marker='o')
+plt.title("Streaming KMeans Degradation with Concept Drift")
+plt.xlabel("Phase")
+plt.ylabel("Avg Distance to True Center")
+plt.xticks([1, 2, 3])
+plt.grid(True)
+plt.show()
