@@ -1,0 +1,32 @@
+import random
+from datetime import datetime, timedelta
+from collections import Counter
+import matplotlib.pyplot as plt
+
+# Step 1: Simulate a stream of log timestamps (randomly over a day)
+base_time = datetime.now().replace(minute=0, second=0, microsecond=0)
+log_stream = [base_time + timedelta(minutes=random.randint(0, 1439)) for _ in range(200)]
+
+# Step 2: Extract hours and count
+hourly_counts = Counter()
+for timestamp in log_stream:
+    hour = timestamp.hour
+    hourly_counts[hour] += 1
+
+# Step 3: Output counts
+print("Hourly Log Activity:")
+for hour in range(24):
+    print(f"{hour:02d}:00 → {hourly_counts[hour]} logs")
+
+# Step 4: Plot the results (optional)
+hours = list(range(24))
+counts = [hourly_counts[h] for h in hours]
+
+plt.bar(hours, counts, color='skyblue')
+plt.xlabel('Hour of Day')
+plt.ylabel('Number of Logs')
+plt.title('Server Log Activity by Hour')
+plt.xticks(hours)
+plt.grid(True, linestyle='--', alpha=0.5)
+plt.tight_layout()
+plt.show()
