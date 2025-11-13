@@ -1,0 +1,39 @@
+from river import linear_model, metrics
+import random
+
+# Step 1: Simulate streaming transaction data
+random.seed(42)
+stream = [
+    ({"amount": amt}, label)
+    for amt, label in [
+        (random.uniform(10, 5000), random.choice([0, 1]))
+        for _ in range(100)
+    ]
+]
+
+# Step 2: Initialize model and metrics
+model = linear_model.LogisticRegression()
+conf_matrix = metrics.ConfusionMatrix()
+roc_auc = metrics.ROCAUC()
+
+# Step 3: Prequential evaluation (test-then-train)
+for x, y in stream:
+    # Predict (or assign 0 if model is untrained)
+    y_pred = model.predict_one(x)
+    if y_pred is None:
+        y_pred = 0
+
+    # Predicted probability for class 1
+    y_proba = model.predict_proba_one(x).get(1, 0.0)
+
+    # Update metrics (in place)
+    conf_matrix.update(y, y_pred)
+    roc_auc.update(y, y_proba)
+
+    # Learn from current example
+    model.learn_one(x, y)
+
+# Step 4: Output results
+print("      Confusion Matrix:")
+print(conf_matrix)
+print(f"\n    ROC AUC Score: {roc_auc.get():.2f}")
