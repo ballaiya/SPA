@@ -1,0 +1,16 @@
+import random 
+import time 
+# Step 1: Simulate 10,000 sensor records 
+sensor_data = [(random.uniform(20, 40), random.uniform(30, 70)) for _ in range(10000)] 
+# Step 2: Process in pure Python and measure time 
+start = time.time() 
+# Sample processing: filter records where temperature > 30 
+high_temp = [record for record in sensor_data if record[0] > 30] 
+end = time.time() 
+duration = end - start 
+latency = duration / len(sensor_data) 
+throughput = len(sensor_data) / duration 
+print("           Pure Python Processing:") 
+print(f"Total Time: {duration:.4f} seconds") 
+print(f"Latency: {latency:.8f} sec/record") 
+print(f"Throughput: {throughput:.2f} records/sec") 
