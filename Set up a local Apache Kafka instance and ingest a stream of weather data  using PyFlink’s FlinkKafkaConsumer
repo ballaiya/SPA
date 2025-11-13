@@ -1,0 +1,54 @@
+
+############ kafka command line code
+# Start Zookeeper 
+zookeeper-server-start.sh config/zookeeper.properties 
+# Start Kafka Broker 
+kafka-server-start.sh config/server.properties 
+# Create a topic 
+kafka-topics.sh --create --topic weather-data --bootstrap-server localhost:9092 --partitions 1 -
+replication-factor 1 
+
+###### python for kafka
+from pyflink.table import EnvironmentSettings, TableEnvironment 
+# Step 1: Set up streaming environment 
+env_settings = EnvironmentSettings.in_streaming_mode() 
+table_env = TableEnvironment.create(env_settings) 
+# Step 2: Define Kafka source 
+kafka_ddl = """ 
+CREATE TABLE WeatherData ( 
+    location STRING, 
+    temperature DOUBLE, 
+    humidity DOUBLE 
+) WITH ( 
+    'connector' = 'kafka', 
+    'topic' = 'weather-data', 
+    'properties.bootstrap.servers' = 'localhost:9092', 
+    'format' = 'json', 
+    'scan.startup.mode' = 'earliest-offset' 
+) 
+""" 
+table_env.execute_sql(kafka_ddl) 
+# Step 3: Query data 
+result = table_env.execute_sql("SELECT * FROM WeatherData") 
+result.print() 
+
+
+
+####################################################
+this is only run in kafka
+
+but it will give output ,to get the output run the below python code 
+
+from river import stream
+
+data = [
+    {"location": "NYC", "temperature": 25.3, "humidity": 70},
+    {"location": "LA", "temperature": 30.1, "humidity": 40},
+    {"location": "SF", "temperature": 22.5, "humidity": 60},
+]
+
+for x in data:
+    print(f"Streaming record: {x}")
+
+
+##############################################################3
