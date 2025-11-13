@@ -1,0 +1,39 @@
+from pyflink.table import EnvironmentSettings, TableEnvironment 
+# Step 1: Set up streaming environment 
+env_settings = EnvironmentSettings.in_streaming_mode() 
+table_env = TableEnvironment.create(env_settings) 
+# Step 2: Define source table (inline collection here, Kafka in real use) 
+source_ddl = """ 
+CREATE TABLE WeatherStream ( 
+    location STRING, 
+    temperature DOUBLE 
+) WITH ( 
+    'connector' = 'datagen', 
+    'rows-per-second' = '1', 
+    'fields.location.length' = '10', 
+    'fields.temperature.min' = '20', 
+    'fields.temperature.max' = '40' 
+) 
+""" 
+table_env.execute_sql(source_ddl) 
+# Step 3: Define JDBC sink table 
+sink_ddl = """ 
+CREATE TABLE AggregatedWeather ( 
+    location STRING, 
+    avg_temp DOUBLE 
+) WITH ( 
+    'connector' = 'jdbc', 
+    'url' = 'jdbc:sqlite:/path/to/weather.db', 
+    'table-name' = 'aggregated_weather', 
+    'driver' = 'org.sqlite.JDBC' 
+) 
+""" 
+table_env.execute_sql(sink_ddl) 
+# Step 4: Insert transformed data 
+insert_sql = """ 
+INSERT INTO AggregatedWeather 
+SELECT location, AVG(temperature) as avg_temp 
+FROM WeatherStream 
+GROUP BY location 
+""" 
+table_env.execute_sql(insert_sql)
