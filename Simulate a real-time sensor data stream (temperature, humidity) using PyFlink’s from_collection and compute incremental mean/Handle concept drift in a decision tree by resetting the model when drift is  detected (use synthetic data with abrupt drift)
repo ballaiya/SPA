@@ -1,0 +1,35 @@
+!pip install river -q
+
+from river import tree, drift, metrics
+import random
+
+# Step 1: Initialize model, drift detector, and metric
+model = tree.HoeffdingTreeClassifier()
+adwin = drift.ADWIN()
+metric = metrics.Accuracy()
+
+# Step 2: Simulated stream with concept drift (first 100 -> class 0, next 100 -> class 1)
+stream = [(random.gauss(25, 1), 0) for _ in range(100)] + [(random.gauss(30, 1), 1) for _ in range(100)]
+
+print("Index\tPred\tTrue\tAccuracy\tDrift")
+
+for i, (feature_value, label) in enumerate(stream):
+    x = {"temp": feature_value}
+    y_pred = model.predict_one(x) or 0   # Predict before learning
+    metric.update(label, y_pred)         # Update accuracy
+    model.learn_one(x, label)            # Incremental learning
+    
+    # Compute error (1 if wrong, 0 if correct)
+    error = int(y_pred != label)
+    adwin.update(error)
+    
+    # Check for drift
+    if adwin.drift_detected:
+        drift_status = "YES"
+        print(f"⚠️  Drift detected at index {i+1}. Resetting model.\n")
+        model = tree.HoeffdingTreeClassifier()  # Reset model
+        adwin = drift.ADWIN()                   # Reset ADWIN detector
+    else:
+        drift_status = "-"
+    
+    print(f"{i+1}\t{y_pred}\t{label}\t{metric.get():.2f}\t\t{drift_status}")
