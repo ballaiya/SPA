@@ -1,0 +1,26 @@
+# If using Colab:
+!pip install river -q
+
+from river import tree, metrics
+
+# Step 1: Initialize VFDT (Hoeffding Tree) and accuracy metric
+model = tree.HoeffdingTreeClassifier()
+metric = metrics.Accuracy()
+
+# Step 2: Simulated streaming dataset (transaction features + fraud label)
+stream = [
+    ({"amount": 100, "location": 1}, 0),
+    ({"amount": 5000, "location": 2}, 1),
+    ({"amount": 120, "location": 1}, 0),
+    ({"amount": 7000, "location": 3}, 1),
+    ({"amount": 200, "location": 1}, 0),
+    ({"amount": 4500, "location": 2}, 1)
+]
+
+# Step 3: Stream through data (test-then-train)
+print("Index\tPred\tTrue\tAccuracy")
+for i, (x, y_true) in enumerate(stream):
+    y_pred = model.predict_one(x) or 0   # Predict before learning
+    metric.update(y_true, y_pred)        # Update accuracy
+    model.learn_one(x, y_true)           # Train incrementally
+    print(f"{i+1}\t{y_pred}\t{y_true}\t{metric.get():.2f}")
