@@ -1,0 +1,19 @@
+import numpy as np
+
+# Step 1: Simulated transaction stream
+transactions = [120, 80, 150, 200, 90, 60, 300, 180, 75, 95]
+
+# Tumbling window size
+tumbling_size = 4
+print("Tumbling Window (Size 4)")
+for i in range(0, len(transactions), tumbling_size):
+    window = transactions[i:i + tumbling_size]
+    if len(window) == tumbling_size:
+        print(f"Window {i // tumbling_size + 1}: {window} → Sum = {sum(window)}, Avg = {np.mean(window):.2f}")
+
+# Sliding window size
+sliding_size = 4
+print("\nSliding Window (Size 4)")
+for i in range(len(transactions) - sliding_size + 1):
+    window = transactions[i:i + sliding_size]
+    print(f"Window {i + 1}: {window} → Sum = {sum(window)}, Avg = {np.mean(window):.2f}")
