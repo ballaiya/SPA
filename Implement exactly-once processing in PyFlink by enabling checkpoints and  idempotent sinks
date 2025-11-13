@@ -1,0 +1,44 @@
+from pyflink.datastream import StreamExecutionEnvironment, CheckpointingMode 
+from pyflink.table import StreamTableEnvironment, EnvironmentSettings 
+# Step 1: Initialize StreamExecutionEnvironment 
+env = StreamExecutionEnvironment.get_execution_environment() 
+env.enable_checkpointing(10000, CheckpointingMode.EXACTLY_ONCE)  # every 10 sec 
+env.get_checkpoint_config().set_min_pause_between_checkpoints(5000) 
+# Step 2: Enable state backend (optional) 
+# env.set_state_backend(FsStateBackend("file:///tmp/flink-checkpoints")) 
+# Step 3: Set up Table Environment 
+settings = EnvironmentSettings.new_instance().in_streaming_mode().build() 
+t_env = StreamTableEnvironment.create(env, environment_settings=settings) 
+# Step 4: Define source table (e.g., Kafka) 
+t_env.execute_sql(""" 
+CREATE TABLE SourceTable ( 
+    id STRING, 
+    temperature DOUBLE 
+) WITH ( 
+    'connector' = 'kafka', 
+    'topic' = 'sensor-input', 
+    'properties.bootstrap.servers' = 'localhost:9092', 
+    'format' = 'json', 
+    'scan.startup.mode' = 'earliest-offset' 
+) 
+""") 
+# Step 5: Define idempotent sink (e.g., JDBC with primary key) 
+t_env.execute_sql(""" 
+CREATE TABLE SinkTable ( 
+    id STRING, 
+    max_temp DOUBLE, 
+    PRIMARY KEY (id) NOT ENFORCED 
+) WITH ( 
+    'connector' = 'jdbc', 
+    'url' = 'jdbc:sqlite:/path/to/sensor.db', 
+    'table-name' = 'sensor_summary', 
+    'driver' = 'org.sqlite.JDBC' 
+) 
+""") 
+# Step 6: Processing logic with deduplication/upsert behavior 
+t_env.execute_sql(""" 
+INSERT INTO SinkTable 
+SELECT id, MAX(temperature) as max_temp 
+FROM SourceTable 
+GROUP BY id 
+""")
